@@ -255,3 +255,113 @@ describe('remove tabs', function() {
 
 });
 
+
+describe('tab content via Ajax', function() {
+  var elm, scope, $httpBackend;
+  var originalPaneConfig = {};
+
+  // load the tabs code
+  beforeEach(module('ui.bootstrap.tabs'));
+
+  // load the templates
+  beforeEach(module('template/tabs/tabs.html', 'template/tabs/pane.html'));
+
+  beforeEach(inject(function($injector) {
+    $httpBackend = $injector.get('$httpBackend');
+
+    // backend definition common for all tests
+    $httpBackend.when('GET', 'partial.html').respond('second content is {{second}}');
+    $httpBackend.when('GET', 'notexist.html').respond(404, '');
+  }));
+
+  beforeEach(inject(function($rootScope, $compile, paneConfig) {
+    // we might move this tpl into an html file as well...
+    elm = angular.element(
+      '<div>' +
+        '<tabs>' +
+          '<pane heading="Static Tab">' +
+            'static content is {{first}}' +
+          '</pane>' +
+          '<pane heading="Ajax Tab" src="partial.html">' +
+            'loading...' +
+          '</pane>' +
+          '<pane heading="Ajax Tab (broken)" src="notexist.html">' +
+            'loading...' +
+          '</pane>' +
+          '<pane ng-repeat="pane in panes" heading="{{pane.title}}" src="{{pane.url}}">' +
+            '{{pane.loading}}' +
+          '</pane>' +
+        '</tabs>' +
+      '</div>');
+
+    angular.extend(originalPaneConfig, paneConfig);
+
+    scope = $rootScope;
+    scope.panes = [];
+    $compile(elm)(scope);
+    scope.$digest();
+  }));
+
+  it('should create clickable titles', inject(function($compile, $rootScope) {
+    var titles = elm.find('ul.nav-tabs li a');
+
+    expect(titles.length).toBe(3);
+    expect(titles.eq(0).text()).toBe('Static Tab');
+    expect(titles.eq(1).text()).toBe('Ajax Tab');
+    expect(titles.eq(2).text()).toBe('Ajax Tab (broken)');
+  }));
+
+
+  it('should bind the content', function() {
+    var contents = elm.find('div.tab-content div.tab-pane');
+
+    expect(contents.length).toBe(3);
+    expect(contents.eq(0).text()).toBe('static content is ');
+    expect(contents.eq(1).text()).toBe('loading...');
+    expect(contents.eq(2).text()).toBe('loading...');
+
+    scope.$apply(function() {
+      scope.first = 123;
+      scope.second = 456;
+    });
+
+    $httpBackend.flush();
+
+    expect(contents.eq(0).text()).toBe('static content is 123');
+    expect(contents.eq(1).text()).toBe('second content is 456');
+    expect(contents.eq(2).text()).toBe(originalPaneConfig.srcError);
+  });
+
+  it('should bind the content for dynamically created tabs', function() {
+    scope.panes.push({title:"Dynamic Ajax", loading:"New Loading...", url:"partial.html"});
+    scope.$digest();
+
+    var titles = elm.find('ul.nav-tabs li a');
+    var contents = elm.find('div.tab-content div.tab-pane');
+
+    expect(titles.length).toBe(4);
+    expect(titles.eq(0).text()).toBe('Static Tab');
+    expect(titles.eq(1).text()).toBe('Ajax Tab');
+    expect(titles.eq(2).text()).toBe('Ajax Tab (broken)');
+    expect(titles.eq(3).text()).toBe('Dynamic Ajax');
+
+    expect(contents.length).toBe(4);
+    expect(contents.eq(0).text()).toBe('static content is ');
+    expect(contents.eq(1).text()).toBe('loading...');
+    expect(contents.eq(2).text()).toBe('loading...');
+    expect(contents.eq(3).text()).toBe('New Loading...');
+
+    scope.$apply(function() {
+      scope.first = 123;
+      scope.second = 456;
+    });
+
+    $httpBackend.flush();
+
+    expect(contents.eq(0).text()).toBe('static content is 123');
+    expect(contents.eq(1).text()).toBe('second content is 456');
+    expect(contents.eq(2).text()).toBe(originalPaneConfig.srcError);
+    expect(contents.eq(3).text()).toBe('second content is 456');
+  });
+});
+

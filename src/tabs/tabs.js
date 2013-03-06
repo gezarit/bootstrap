@@ -35,13 +35,19 @@ angular.module('ui.bootstrap.tabs', [])
     replace: true
   };
 })
-.directive('pane', ['$parse', function($parse) {
+
+.constant('paneConfig', {
+  srcError: 'Couldn\'t load this tab!'
+})
+
+.directive('pane', ['$parse', '$http', '$compile', 'paneConfig', function($parse, $http, $compile, paneConfig) {
   return {
     require: '^tabs',
     restrict: 'EA',
     transclude: true,
     scope:{
-      heading:'@'
+      heading:'@',
+      src:'@'
     },
     link: function(scope, element, attrs, tabsCtrl) {
       var getSelected, setSelected;
@@ -62,6 +68,18 @@ angular.module('ui.bootstrap.tabs', [])
         if(setSelected) {
           setSelected(scope.$parent, selected);
         }
+      });
+
+      // Content via Ajax
+      scope.$watch('src', function(url) {
+          if (angular.isDefined(url) && url !== '') {
+            $http.get(url).success(function(response) {
+              element.html(response);
+              $compile(element.contents())(scope.$parent);
+            }).error(function() {
+              element.html(paneConfig.srcError);
+            });
+          }
       });
 
       tabsCtrl.addPane(scope);
