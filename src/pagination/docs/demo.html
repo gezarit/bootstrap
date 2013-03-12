@@ -1,9 +1,16 @@
 <div ng-controller="PaginationDemoCtrl">
-    <pagination num-pages="noOfPages" current-page="currentPage"></pagination>
-    <pagination num-pages="noOfPages" current-page="currentPage" class="pagination-small" previous-text="&laquo;" next-text="&raquo;"></pagination>
-    <pagination boundary-links="true" num-pages="noOfPages" current-page="currentPage" max-size="maxSize"></pagination>
-    <pagination num-pages="noOfPages" current-page="currentPage"  max-size="maxSize"></pagination>
-    <pagination direction-links="false" num-pages="noOfPages" current-page="currentPage"></pagination>
-    <button class="btn" ng-click="setPage(3)">Set current page to: 3</button>
-    The selected page no: {{currentPage}}
+    <div class="well">
+        <pagination num-pages="noOfPages" current-page="currentPage"></pagination>
+        <pagination num-pages="noOfPages" current-page="currentPage" class="pagination-small" previous-text="&laquo;" next-text="&raquo;"></pagination>
+        <pagination boundary-links="true" num-pages="noOfPages" current-page="currentPage" max-size="maxSize"></pagination>
+        <pagination direction-links="false" boundary-links="true" num-pages="noOfPages" current-page="currentPage"  max-size="maxSize"></pagination>
+        <pagination direction-links="false" num-pages="noOfPages" current-page="currentPage"></pagination>
+        <button class="btn" ng-click="setPage(3)">Set current page to: 3</button>
+        The selected page no: {{currentPage}}
+    </div>
+
+    <div class="well">
+        <pagination num-pages="bigNoOfPages" current-page="bigCurrentPage"  max-size="10" grouped-max-mode="true" class="pagination-mini" previous-text="&lsaquo;" next-text="&rsaquo;" first-text="&laquo;" last-text="&raquo;" boundary-links="true"></pagination>
+        Selected: {{bigCurrentPage}} of {{bigNoOfPages}}
+    </div>
 </div>

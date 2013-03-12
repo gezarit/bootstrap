@@ -6,7 +6,9 @@ angular.module('ui.bootstrap.pagination', [])
   firstText: 'First',
   previousText: 'Previous',
   nextText: 'Next',
-  lastText: 'Last'
+  lastText: 'Last',
+  groupedMaxMode: false,
+  ellipsisText: '...'
 })
 
 .directive('pagination', ['paginationConfig', function(paginationConfig) {
@@ -29,6 +31,8 @@ angular.module('ui.bootstrap.pagination', [])
       var previousText = angular.isDefined(attrs.previousText) ? attrs.previousText : paginationConfig.previousText;
       var nextText = angular.isDefined(attrs.nextText) ? attrs.nextText : paginationConfig.nextText;
       var lastText = angular.isDefined(attrs.lastText) ? attrs.lastText : paginationConfig.lastText;
+      var groupedMaxMode = angular.isDefined(attrs.groupedMaxMode) ? scope.$eval(attrs.groupedMaxMode) : paginationConfig.groupedMaxMode;
+      var ellipsisText = angular.isDefined(attrs.ellipsisText) ? attrs.ellipsisText : paginationConfig.ellipsisText;
 
       // Create page object used in template
       function makePage(number, text, isActive, isDisabled) {
@@ -40,43 +44,81 @@ angular.module('ui.bootstrap.pagination', [])
         };
       }
 
+      // Compute start & last page based on maxMode
+      function getMaxLimits(current, size, numPages) {
+        var start;
+
+        if ( groupedMaxMode ) {
+          // Visible pages are paginated with maxSize
+          start = ((Math.ceil(current / size) - 1) * size) + 1;
+
+          // Adjust maxSize if limit is exceeded
+          if ((start + size - 1) > numPages) {
+            size = numPages - start + 1;
+          }
+        } else {
+          // Current page is displayed in the middle of the visible ones
+          start = current - Math.floor(size/2);
+
+          //adjust the startPage within boundary
+          if(start < 1) {
+              start = 1;
+          }
+          // Adjust start page if limit is exceeded
+          if ((start + size - 1) > numPages) {
+              start = numPages - size + 1;
+          }
+        }
+
+        return {
+          start: start,
+          size: size
+        };
+      }
+
       scope.$watch('numPages + currentPage + maxSize', function() {
         scope.pages = [];
         
         //set the default maxSize to numPages
-        var maxSize = ( scope.maxSize && scope.maxSize < scope.numPages ) ? scope.maxSize : scope.numPages;
-        var startPage = scope.currentPage - Math.floor(maxSize/2);
-        
-        //adjust the startPage within boundary
-        if(startPage < 1) {
-            startPage = 1;
-        }
-        if ((startPage + maxSize - 1) > scope.numPages) {
-            startPage = startPage - ((startPage + maxSize - 1) - scope.numPages );
+        var maxSize, startPage;
+
+        if ( scope.maxSize && scope.maxSize < scope.numPages ) {
+          var limits = getMaxLimits(scope.currentPage, scope.maxSize, scope.numPages);
+
+          maxSize = limits.size;
+          startPage = limits.start;
+        } else {
+          // Display all pages
+          maxSize = scope.numPages;
+          startPage = 1;
         }
 
         // Add page number links
-        for (var number = startPage, max = startPage + maxSize; number < max; number++) {
-          var page = makePage(number, number, scope.isActive(number), false);
-          scope.pages.push(page);
+        var maxPage = startPage + maxSize;
+        for (var number = startPage; number < maxPage; number++) {
+          scope.pages.push(makePage(number, number, scope.isActive(number), false));
+        }
+
+        // Add ellipsis links
+        if ( groupedMaxMode ) {
+          if (startPage > 1) {
+            scope.pages.unshift(makePage(startPage - 1, ellipsisText, false, false));
+          }
+          if (maxPage < scope.numPages) {
+            scope.pages.push(makePage(maxPage, ellipsisText, false, false));
+          }
         }
 
         // Add previous & next links
         if (directionLinks) {
-          var previousPage = makePage(scope.currentPage - 1, previousText, false, scope.noPrevious());
-          scope.pages.unshift(previousPage);
-
-          var nextPage = makePage(scope.currentPage + 1, nextText, false, scope.noNext());
-          scope.pages.push(nextPage);
+          scope.pages.unshift(makePage(scope.currentPage - 1, previousText, false, scope.noPrevious()));
+          scope.pages.push(makePage(scope.currentPage + 1, nextText, false, scope.noNext()));
         }
 
         // Add first & last links
         if (boundaryLinks) {
-          var firstPage = makePage(1, firstText, false, scope.noPrevious());
-          scope.pages.unshift(firstPage);
-
-          var lastPage = makePage(scope.numPages, lastText, false, scope.noNext());
-          scope.pages.push(lastPage);
+          scope.pages.unshift(makePage(1, firstText, false, scope.noPrevious()));
+          scope.pages.push(makePage(scope.numPages, lastText, false, scope.noNext()));
         }
 
 

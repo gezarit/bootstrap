@@ -192,6 +192,66 @@ describe('pagination directive with max size option', function () {
 
 });
 
+describe('pagination directive with max size option & grouped mode', function () {
+  var $rootScope, element;
+  beforeEach(module('ui.bootstrap.pagination'));
+  beforeEach(module('template/pagination/pagination.html'));
+  beforeEach(inject(function(_$compile_, _$rootScope_) {
+    $compile = _$compile_;
+    $rootScope = _$rootScope_;
+    $rootScope.numPages = 14;
+    $rootScope.currentPage = 7;
+    $rootScope.maxSize = 5;
+    element = $compile('<pagination num-pages="numPages" current-page="currentPage" max-size="maxSize" grouped-max-mode="true" direction-links="false"></pagination>')($rootScope);
+    $rootScope.$digest();
+  }));
+
+  it('contains one ul and maxsize + 2 li (ellipsis) elements', function() {
+    expect(element.find('ul').length).toBe(1);
+    expect(element.find('li').length).toBe($rootScope.maxSize + 2);
+    expect(element.find('li').eq(0).text()).toBe('...');
+    expect(element.find('li').eq(1).text()).toBe('6');
+    expect(element.find('li').eq(-2).text()).toBe('10');
+    expect(element.find('li').eq(-1).text()).toBe('...');
+  });
+
+  it('shows only the previous ellipsis elements', function() {
+    $rootScope.currentPage = 3;
+    $rootScope.$digest();
+    expect(element.find('li').eq(0).text()).toBe('1');
+    expect(element.find('li').eq(-2).text()).toBe('5');
+    expect(element.find('li').eq(-1).text()).toBe('...');
+  });
+
+  it('shows only the next ellipsis elements', function() {
+    $rootScope.currentPage = 12;
+    $rootScope.$digest();
+    expect(element.find('li').eq(0).text()).toBe('...');
+    expect(element.find('li').eq(1).text()).toBe('11');
+    expect(element.find('li').eq(-1).text()).toBe('14');
+  });
+
+  it('moves to the previous group when first ellipsis is clicked', function() {
+    var prev = element.find('li').eq(0).find('a').eq(0);
+    expect(prev.text()).toBe('...');
+
+    prev.click();
+    expect($rootScope.currentPage).toBe(5);
+    var currentPageItem = element.find('li').eq(-2);
+    expect(currentPageItem.hasClass('active')).toBe(true);
+  });
+
+  it('moves to the next group when last ellipsis is clicked', function() {
+    var next = element.find('li').eq(-1).find('a').eq(0);
+    expect(next.text()).toBe('...');
+
+    next.click();
+    expect($rootScope.currentPage).toBe(11);
+    var currentPageItem = element.find('li').eq(1);
+    expect(currentPageItem.hasClass('active')).toBe(true);
+  });
+});
+
 describe('pagination directive with added first & last links', function () {
   var $rootScope, element;
   beforeEach(module('ui.bootstrap.pagination'));
