@@ -1,16 +1,15 @@
-<div ng-controller="PaginationDemoCtrl">
-    <div class="well">
-        <pagination num-pages="noOfPages" current-page="currentPage"></pagination>
-        <pagination num-pages="noOfPages" current-page="currentPage" class="pagination-small" previous-text="&laquo;" next-text="&raquo;"></pagination>
-        <pagination boundary-links="true" num-pages="noOfPages" current-page="currentPage" max-size="maxSize"></pagination>
-        <pagination direction-links="false" boundary-links="true" num-pages="noOfPages" current-page="currentPage"  max-size="maxSize"></pagination>
-        <pagination direction-links="false" num-pages="noOfPages" current-page="currentPage"></pagination>
-        <button class="btn" ng-click="setPage(3)">Set current page to: 3</button>
-        The selected page no: {{currentPage}}
-    </div>
+<div ng-controller="PaginationDemoCtrl" class="well well-small">
+    <h4>Default</h4>
+    <pagination num-pages="noOfPages" current-page="currentPage"></pagination>
+    <pagination boundary-links="true" num-pages="noOfPages" current-page="currentPage" class="pagination-small" previous-text="&lsaquo;" next-text="&rsaquo;" first-text="&laquo;" last-text="&raquo;"></pagination>
+    <pagination direction-links="false" num-pages="noOfPages" current-page="currentPage"></pagination>
 
-    <div class="well">
-        <pagination num-pages="bigNoOfPages" current-page="bigCurrentPage"  max-size="10" grouped-max-mode="true" class="pagination-mini" previous-text="&lsaquo;" next-text="&rsaquo;" first-text="&laquo;" last-text="&raquo;" boundary-links="true"></pagination>
-        Selected: {{bigCurrentPage}} of {{bigNoOfPages}}
-    </div>
+    <pager align="true" num-pages="noOfPages" current-page="currentPage"></pager>
+
+    <button class="btn" ng-click="setPage(3)">Set current page to: 3</button>
+    The selected page no: {{currentPage}}
+
+    <h4>Max-size</h4>
+    <pagination num-pages="bigNoOfPages" current-page="bigCurrentPage" max-size="maxSize" class="pagination-mini" boundary-links="true"></pagination>
+    <pagination rotate="false" num-pages="bigNoOfPages" current-page="bigCurrentPage" max-size="maxSize" class="pagination-mini" boundary-links="true"></pagination>
 </div>

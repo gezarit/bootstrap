@@ -192,7 +192,7 @@ describe('pagination directive with max size option', function () {
 
 });
 
-describe('pagination directive with max size option & grouped mode', function () {
+describe('pagination directive with max size option & no rotate', function () {
   var $rootScope, element;
   beforeEach(module('ui.bootstrap.pagination'));
   beforeEach(module('template/pagination/pagination.html'));
@@ -202,7 +202,7 @@ describe('pagination directive with max size option & grouped mode', function ()
     $rootScope.numPages = 14;
     $rootScope.currentPage = 7;
     $rootScope.maxSize = 5;
-    element = $compile('<pagination num-pages="numPages" current-page="currentPage" max-size="maxSize" grouped-max-mode="true" direction-links="false"></pagination>')($rootScope);
+    element = $compile('<pagination num-pages="numPages" current-page="currentPage" max-size="maxSize" rotate="false" direction-links="false"></pagination>')($rootScope);
     $rootScope.$digest();
   }));
 
@@ -231,7 +231,7 @@ describe('pagination directive with max size option & grouped mode', function ()
     expect(element.find('li').eq(-1).text()).toBe('14');
   });
 
-  it('moves to the previous group when first ellipsis is clicked', function() {
+  it('moves to the previous set when first ellipsis is clicked', function() {
     var prev = element.find('li').eq(0).find('a').eq(0);
     expect(prev.text()).toBe('...');
 
@@ -241,7 +241,7 @@ describe('pagination directive with max size option & grouped mode', function ()
     expect(currentPageItem.hasClass('active')).toBe(true);
   });
 
-  it('moves to the next group when last ellipsis is clicked', function() {
+  it('moves to the next set when last ellipsis is clicked', function() {
     var next = element.find('li').eq(-1).find('a').eq(0);
     expect(next.text()).toBe('...');
 
@@ -249,6 +249,16 @@ describe('pagination directive with max size option & grouped mode', function ()
     expect($rootScope.currentPage).toBe(11);
     var currentPageItem = element.find('li').eq(1);
     expect(currentPageItem.hasClass('active')).toBe(true);
+  });
+
+  it('ignores maxsize when in last set', function() {
+    $rootScope.currentPage = 12;
+    $rootScope.numPages = 13;
+    $rootScope.$digest();
+
+    expect(element.find('ul').length).toBe(1);
+    expect(element.find('li').length).not.toBe($rootScope.maxSize + 2);
+    expect(element.find('li').length).toBe(4);
   });
 });
 
@@ -264,7 +274,6 @@ describe('pagination directive with added first & last links', function () {
     element = $compile('<pagination boundary-links="true" num-pages="numPages" current-page="currentPage"></pagination>')($rootScope);
     $rootScope.$digest();
   }));
-
 
   it('contains one ul and num-pages + 4 li elements', function() {
     expect(element.find('ul').length).toBe(1);
@@ -284,7 +293,6 @@ describe('pagination directive with added first & last links', function () {
     expect(lastLiEl.text()).toBe('Last');
     expect(lastLiEl.css('display')).not.toBe('none');
   });
-
 
   it('disables the "first" & "previous" link if current-page is 1', function() {
     $rootScope.currentPage = 1;
@@ -410,7 +418,6 @@ describe('pagination directive with just number links', function () {
     expect($rootScope.currentPage).toBe(2);
   });
 
-
   it('executes the onSelectPage expression when the current page changes', function() {
     $rootScope.selectPageHandler = jasmine.createSpy('selectPageHandler');
     element = $compile('<pagination direction-links="false" num-pages="numPages" current-page="currentPage" on-select-page="selectPageHandler(page)"></pagination>')($rootScope);
@@ -438,6 +445,34 @@ describe('pagination directive with just number links', function () {
     expect(element.find('li').length).toBe(2);
     expect($rootScope.currentPage).toBe(2);
     expect($rootScope.selectPageHandler).toHaveBeenCalledWith(2);
+  });
+});
+
+describe('pagination directive that auto-hides for single page', function () {
+  var $rootScope, element;
+  beforeEach(module('ui.bootstrap.pagination'));
+  beforeEach(module('template/pagination/pagination.html'));
+  beforeEach(inject(function(_$compile_, _$rootScope_) {
+    $compile = _$compile_;
+    $rootScope = _$rootScope_;
+    $rootScope.numPages = 5;
+    $rootScope.currentPage = 3;
+    element = $compile('<pagination show-single="false" num-pages="numPages" current-page="currentPage"></pagination>')($rootScope);
+    $rootScope.$digest();
+  }));
+
+
+  it('contains one ul and num-pages + 2 li elements', function() {
+    expect(element.find('ul').length).toBe(1);
+    expect(element.find('ul').css('display')).not.toBe('none');
+  });
+
+  it('has no element when there is only one page', function() {
+    $rootScope.numPages = 1;
+    $rootScope.$digest();
+
+    expect(element.find('ul').length).toBe(1);
+    expect(element.find('ul').css('display')).toBe('none');
   });
 });
 
@@ -494,7 +529,6 @@ describe('pagination directive with first, last & number links', function () {
     $rootScope.$digest();
   }));
 
-
   it('contains one ul and num-pages + 2 li elements', function() {
     expect(element.find('ul').length).toBe(1);
     expect(element.find('li').length).toBe(7);
@@ -503,7 +537,6 @@ describe('pagination directive with first, last & number links', function () {
     expect(element.find('li').eq(-2).text()).toBe(''+$rootScope.numPages);
     expect(element.find('li').eq(-1).text()).toBe('Last');
   });
-
 
   it('disables the "first" & activates "1" link if current-page is 1', function() {
     $rootScope.currentPage = 1;
@@ -521,7 +554,6 @@ describe('pagination directive with first, last & number links', function () {
     expect(element.find('li').eq(-1).hasClass('disabled')).toBe(true);
   });
 
-
   it('changes currentPage if the "first" link is clicked', function() {
     var first = element.find('li').eq(0).find('a').eq(0);
     first.click();
@@ -535,7 +567,6 @@ describe('pagination directive with first, last & number links', function () {
     $rootScope.$digest();
     expect($rootScope.currentPage).toBe($rootScope.numPages);
   });
-
 });
 
 describe('pagination bypass configuration from attributes', function () {

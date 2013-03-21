@@ -1,0 +1,5 @@
+<ul class="pager" ng-show="show()">
+  <li ng-class="{disabled: noPrevious(), previous: options.align}"><a ng-click="selectPage(currentPage - 1)">{{options.previousText}}</a></li>
+  <li ng-class="{disabled: noNext(), next: options.align}"><a ng-click="selectPage(currentPage + 1)">{{options.nextText}}</a></li>
+</ul>
+
