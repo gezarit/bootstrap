@@ -1,10 +1,16 @@
-<li class="dropdown" ng-controller="DropdownCtrl">
-  <a class="dropdown-toggle">
-    Click me for a dropdown, yo!
-  </a>
-  <ul class="dropdown-menu">
-    <li ng-repeat="choice in items">
-      <a>{{choice}}</a>
-    </li>
-  </ul>
-</li>
+<ul class="nav nav-pills" ng-controller="DropdownCtrl">
+  <dropdown-toggle heading="Click me for a dropdown!" >
+    <li ng-repeat="choice in items"><a>{{choice}}</a></li>
+  </dropdown-toggle>
+
+  <dropdown-toggle heading="Another one">
+    <li ng-click="log()"><a>Click to execute...</a></li>
+    <li><a>Another action</a></li>
+    <li class="divider"></li>
+    <li><a>Separated link</a></li>
+  </dropdown-toggle>
+
+  <dropdown-toggle heading="This is opened" opened="true">
+    <li ng-repeat="choice in items"><a>{{choice}}</a></li>
+  </dropdown-toggle>
+</ul>
