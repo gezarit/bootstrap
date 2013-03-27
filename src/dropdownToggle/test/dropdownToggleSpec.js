@@ -132,16 +132,20 @@ describe('dropdownToggle', function() {
   });
 
   it('executes other document click events normally', function() {
-    var checkbox = $compile('<input type="checkbox" value="1"></input>')($rootScope);
+    var checkboxEl = $compile('<input type="checkbox" ng-click="clicked = true" />')($rootScope);
     $rootScope.$digest();
 
     expect(element.hasClass('open')).toBe(false);
-    expect(checkbox.attr('checked')).toBeFalsy();
+    expect($rootScope.clicked).toBeFalsy();
+
     element.click();
+    $rootScope.$digest();
     expect(element.hasClass('open')).toBe(true);
-    expect(checkbox.attr('checked')).toBeFalsy();
-    checkbox.click();
-    expect(checkbox.attr('checked')).toBeTruthy();
+    expect($rootScope.clicked).toBeFalsy();
+
+    checkboxEl.click();
+    $rootScope.$digest();
+    expect($rootScope.clicked).toBeTruthy();
   });
 
   it('handles correctly placement attribute', function() {
