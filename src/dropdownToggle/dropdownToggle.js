@@ -11,7 +11,9 @@ angular.module('ui.bootstrap.dropdownToggle', []).directive('dropdownToggle',
     restrict: 'EA',
     transclude: true,
     scope: {
-      heading: '@'
+      heading: '@',
+      placement: '@',
+      onToggle: '&'
     },
     templateUrl: 'template/dropdownToggle/dropdownToggle.html',
     replace: true,
@@ -19,7 +21,7 @@ angular.module('ui.bootstrap.dropdownToggle', []).directive('dropdownToggle',
       var initiallyOpen = (angular.isDefined(attrs.opened)) ? scope.$eval(attrs.opened) : false;
 
       scope.isOpen = function() {
-        return scope.open;
+        return ( scope.open === true );
       };
 
       scope.toggleClose = function(isDocumentClick) {
@@ -42,7 +44,7 @@ angular.module('ui.bootstrap.dropdownToggle', []).directive('dropdownToggle',
         openScope = scope;
       };
 
-      scope.toggle = function(event) {
+      element.bind('click', function(event) {
         event.preventDefault();
         event.stopPropagation();
 
@@ -52,7 +54,10 @@ angular.module('ui.bootstrap.dropdownToggle', []).directive('dropdownToggle',
         } else {
           scope.toggleOpen();
         }
-      };
+        scope.$apply();
+
+        scope.onToggle({ open: scope.isOpen() });
+      });
 
       scope.$watch(function dropdownTogglePathWatch() {
         return $location.path();

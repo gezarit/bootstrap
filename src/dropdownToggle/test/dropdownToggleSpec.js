@@ -97,7 +97,7 @@ describe('dropdownToggle', function() {
   });
 
   it('executes the inner function on click and closes the dropdown', function() {
-    $rootScope.listHandler = jasmine.createSpy('selectPageHandler');
+    $rootScope.listHandler = jasmine.createSpy('listHandler');
     element = $compile('<dropdown-toggle heading="" opened="true"><li ng-click="listHandler()"></li></dropdown-toggle>')($rootScope);
     $rootScope.$digest();
 
@@ -110,6 +110,45 @@ describe('dropdownToggle', function() {
 
     expect(element.hasClass('open')).toBe(false);
     expect($rootScope.listHandler).toHaveBeenCalled();
+  });
+
+  it('executes the onToggle expression every time the menu opens or closes', function() {
+    $rootScope.toggleHandler = jasmine.createSpy('toggleHandler');
+    element = $compile('<dropdown-toggle heading="" on-toggle="toggleHandler(open)"><li></li></dropdown-toggle>')($rootScope);
+    $rootScope.$digest();
+
+    expect(element.hasClass('open')).toBe(false);
+    expect($rootScope.toggleHandler).not.toHaveBeenCalled();
+
+    element.click();
+    $rootScope.$digest();
+    expect(element.hasClass('open')).toBe(true);
+    expect($rootScope.toggleHandler).toHaveBeenCalledWith(true);
+
+    element.click();
+    $rootScope.$digest();
+    expect(element.hasClass('open')).toBe(false);
+    expect($rootScope.toggleHandler).toHaveBeenCalledWith(false);
+  });
+
+  it('executes other document click events normally', function() {
+    var checkbox = $compile('<input type="checkbox" value="1"></input>')($rootScope);
+    $rootScope.$digest();
+
+    expect(element.hasClass('open')).toBe(false);
+    expect(checkbox.attr('checked')).toBeFalsy();
+    element.click();
+    expect(element.hasClass('open')).toBe(true);
+    expect(checkbox.attr('checked')).toBeFalsy();
+    checkbox.click();
+    expect(checkbox.attr('checked')).toBeTruthy();
+  });
+
+  it('handles correctly placement attribute', function() {
+    element = $compile('<dropdown-toggle heading="" placement="right"><li></li></dropdown-toggle>')($rootScope);
+    $rootScope.$digest();
+
+    expect(element.find('ul').hasClass('pull-right')).toBe(true);
   });
 
 });
