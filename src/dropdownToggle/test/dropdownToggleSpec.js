@@ -13,6 +13,9 @@ describe('dropdownToggle', function() {
     $rootScope.$digest();
   }));
 
+  function toggleElement(_element) {
+    return element.find('a');
+  }
 
   it('should contain the appropriate elements', function() {
      expect(element.hasClass('dropdown')).toBe(true);
@@ -25,36 +28,21 @@ describe('dropdownToggle', function() {
   });
   
   it('should toggle on `a` click', function() {
-    var a = element.find('a');
+    var toggleEl = toggleElement();
 
     expect(element.hasClass('open')).toBe(false);
-    a.click();
+    toggleEl.click();
     expect(element.hasClass('open')).toBe(true);
-    a.click();
+    toggleEl.click();
     expect(element.hasClass('open')).toBe(false);
   });
 
-  it('should toggle on `ul` click', function() {
-    var ul = element.find('ul');
-
-    expect(element.hasClass('open')).toBe(false);
-    ul.click();
-    expect(element.hasClass('open')).toBe(true);
-    ul.click();
-    expect(element.hasClass('open')).toBe(false);
-  });
-
-  it('should toggle on element click', function() {
-    expect(element.hasClass('open')).toBe(false);
-    element.click();
-    expect(element.hasClass('open')).toBe(true);
-    element.click();
-    expect(element.hasClass('open')).toBe(false);
-  });
 
   it('should close on document click', function() {
+    var toggleEl = toggleElement();
+
     expect(element.hasClass('open')).toBe(false);
-    element.click();
+    toggleEl.click();
     expect(element.hasClass('open')).toBe(true);
     $document.click();
     expect(element.hasClass('open')).toBe(false);
@@ -69,13 +57,18 @@ describe('dropdownToggle', function() {
 
   it('should only allow one dropdown to be open at once', function() {
     var element2 = $compile('<dropdown-toggle heading="Click me 2"><li>New 1</li><li>New 2</li></dropdown-toggle>')($rootScope);
+    $rootScope.$digest();
+    var toggleEl = toggleElement();
+    var toggleEl2 = element2.find('a');
 
     expect(element.hasClass('open')).toBe(false);
     expect(element2.hasClass('open')).toBe(false);
-    element.click();
+    toggleEl.click();
+
     expect(element.hasClass('open')).toBe(true);
     expect(element2.hasClass('open')).toBe(false);
-    element2.click();
+    toggleEl2.click();
+
     expect(element.hasClass('open')).toBe(false);
     expect(element2.hasClass('open')).toBe(true);
   });
@@ -98,7 +91,7 @@ describe('dropdownToggle', function() {
 
   it('executes the inner function on click and closes the dropdown', function() {
     $rootScope.listHandler = jasmine.createSpy('listHandler');
-    element = $compile('<dropdown-toggle heading="" opened="true"><li ng-click="listHandler()"></li></dropdown-toggle>')($rootScope);
+    element = $compile('<dropdown-toggle heading="" opened="true"><li ng-click="listHandler()" class="item"></li></dropdown-toggle>')($rootScope);
     $rootScope.$digest();
 
     expect(element.hasClass('open')).toBe(true);
@@ -106,6 +99,7 @@ describe('dropdownToggle', function() {
 
     var li = element.find('li');
     li.click();
+    $document.click();
     $rootScope.$digest();
 
     expect(element.hasClass('open')).toBe(false);
@@ -116,17 +110,16 @@ describe('dropdownToggle', function() {
     $rootScope.toggleHandler = jasmine.createSpy('toggleHandler');
     element = $compile('<dropdown-toggle heading="" on-toggle="toggleHandler(open)"><li></li></dropdown-toggle>')($rootScope);
     $rootScope.$digest();
+    var toggleEl = toggleElement();
 
     expect(element.hasClass('open')).toBe(false);
     expect($rootScope.toggleHandler).not.toHaveBeenCalled();
 
-    element.click();
-    $rootScope.$digest();
+    toggleEl.click();
     expect(element.hasClass('open')).toBe(true);
     expect($rootScope.toggleHandler).toHaveBeenCalledWith(true);
 
-    element.click();
-    $rootScope.$digest();
+    toggleEl.click();
     expect(element.hasClass('open')).toBe(false);
     expect($rootScope.toggleHandler).toHaveBeenCalledWith(false);
   });
@@ -134,11 +127,12 @@ describe('dropdownToggle', function() {
   it('executes other document click events normally', function() {
     var checkboxEl = $compile('<input type="checkbox" ng-click="clicked = true" />')($rootScope);
     $rootScope.$digest();
+    var toggleEl = toggleElement();
 
     expect(element.hasClass('open')).toBe(false);
     expect($rootScope.clicked).toBeFalsy();
 
-    element.click();
+    toggleEl.click();
     $rootScope.$digest();
     expect(element.hasClass('open')).toBe(true);
     expect($rootScope.clicked).toBeFalsy();
