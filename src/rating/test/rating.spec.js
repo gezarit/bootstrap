@@ -10,21 +10,21 @@ describe('rating directive', function () {
     $rootScope.$digest();
   }));
 
+  function getState(stars) {
+    var state = [];
+    for (var i = 0, n = stars.length; i < n; i++) {
+      state.push( (stars.eq(i).hasClass('icon-star') && ! stars.eq(i).hasClass('icon-star-empty')) );
+    }
+    return state;
+  }
+
   it('contains the default number of icons', function() {
     expect(element.find('i').length).toBe(5);
   });
 
   it('initializes the default star icons as selected', function() {
     var stars = element.find('i');
-    expect(stars.eq(0).hasClass('icon-star')).toBe(true);
-    expect(stars.eq(1).hasClass('icon-star')).toBe(true);
-    expect(stars.eq(2).hasClass('icon-star')).toBe(true);
-
-    expect(stars.eq(3).hasClass('icon-star')).toBe(false);
-    expect(stars.eq(3).hasClass('icon-star-empty')).toBe(true);
-
-    expect(stars.eq(4).hasClass('icon-star')).toBe(false);
-    expect(stars.eq(4).hasClass('icon-star-empty')).toBe(true);
+    expect(getState(stars)).toEqual([true, true, true, false, false]);
   });
 
   it('handles correcty the click event', function() {
@@ -33,23 +33,13 @@ describe('rating directive', function () {
     var star2 = stars.eq(1);
     star2.click();
     $rootScope.$digest();
-
-    expect(stars.eq(0).hasClass('icon-star')).toBe(true);
-    expect(stars.eq(1).hasClass('icon-star')).toBe(true);
-    expect(stars.eq(2).hasClass('icon-star-empty')).toBe(true);
-    expect(stars.eq(3).hasClass('icon-star-empty')).toBe(true);
-    expect(stars.eq(4).hasClass('icon-star-empty')).toBe(true);
+    expect(getState(stars)).toEqual([true, true, false, false, false]);
     expect($rootScope.rate).toBe(2);
 
     var star5 = stars.eq(4);
     star5.click();
     $rootScope.$digest();
-
-    expect(stars.eq(0).hasClass('icon-star')).toBe(true);
-    expect(stars.eq(1).hasClass('icon-star')).toBe(true);
-    expect(stars.eq(2).hasClass('icon-star')).toBe(true);
-    expect(stars.eq(3).hasClass('icon-star')).toBe(true);
-    expect(stars.eq(4).hasClass('icon-star')).toBe(true);
+    expect(getState(stars)).toEqual([true, true, true, true, true]);
     expect($rootScope.rate).toBe(5);
   });
 
@@ -59,31 +49,17 @@ describe('rating directive', function () {
     var star2 = stars.eq(1);
     star2.trigger('mouseover');
     $rootScope.$digest();
-
-    expect(stars.eq(0).hasClass('icon-star')).toBe(true);
-    expect(stars.eq(1).hasClass('icon-star')).toBe(true);
-    expect(stars.eq(2).hasClass('icon-star-empty')).toBe(true);
-    expect(stars.eq(3).hasClass('icon-star-empty')).toBe(true);
-    expect(stars.eq(4).hasClass('icon-star-empty')).toBe(true);
+    expect(getState(stars)).toEqual([true, true, false, false, false]);
     expect($rootScope.rate).toBe(3);
 
     var star5 = stars.eq(4);
     star5.trigger('mouseover');
     $rootScope.$digest();
-
-    expect(stars.eq(0).hasClass('icon-star')).toBe(true);
-    expect(stars.eq(1).hasClass('icon-star')).toBe(true);
-    expect(stars.eq(2).hasClass('icon-star')).toBe(true);
-    expect(stars.eq(3).hasClass('icon-star')).toBe(true);
-    expect(stars.eq(4).hasClass('icon-star')).toBe(true);
+    expect(getState(stars)).toEqual([true, true, true, true, true]);
     expect($rootScope.rate).toBe(3);
 
     element.trigger('mouseout');
-    expect(stars.eq(0).hasClass('icon-star')).toBe(true);
-    expect(stars.eq(1).hasClass('icon-star')).toBe(true);
-    expect(stars.eq(2).hasClass('icon-star')).toBe(true);
-    expect(stars.eq(3).hasClass('icon-star-empty')).toBe(true);
-    expect(stars.eq(4).hasClass('icon-star-empty')).toBe(true);
+    expect(getState(stars)).toEqual([true, true, true, false, false]);
     expect($rootScope.rate).toBe(3);
   });
 
@@ -92,11 +68,7 @@ describe('rating directive', function () {
     $rootScope.$digest();
 
     var stars = element.find('i');
-    expect(stars.eq(0).hasClass('icon-star')).toBe(true);
-    expect(stars.eq(1).hasClass('icon-star')).toBe(true);
-    expect(stars.eq(2).hasClass('icon-star-empty')).toBe(true);
-    expect(stars.eq(3).hasClass('icon-star-empty')).toBe(true);
-    expect(stars.eq(4).hasClass('icon-star-empty')).toBe(true);
+    expect(getState(stars)).toEqual([true, true, false, false, false]);
   });
 
   it('shows different number of icons when `max` attribute is set', function() {
@@ -112,25 +84,19 @@ describe('rating directive', function () {
     $rootScope.$digest();
 
     var stars = element.find('i');
-    expect(stars.eq(0).hasClass('icon-star')).toBe(true);
-    expect(stars.eq(1).hasClass('icon-star')).toBe(true);
-    expect(stars.eq(2).hasClass('icon-star')).toBe(true);
-    expect(stars.eq(3).hasClass('icon-star-empty')).toBe(true);
-    expect(stars.eq(4).hasClass('icon-star-empty')).toBe(true);
+    expect(getState(stars)).toEqual([true, true, true, false, false]);
 
     var star5 = stars.eq(4);
     star5.trigger('mouseover');
     $rootScope.$digest();
-    expect(stars.eq(3).hasClass('icon-star-empty')).toBe(true);
-    expect(stars.eq(4).hasClass('icon-star-empty')).toBe(true);
+    expect(getState(stars)).toEqual([true, true, true, false, false]);
 
     $rootScope.isReadonly = false;
     $rootScope.$digest();
 
     star5.trigger('mouseover');
     $rootScope.$digest();
-    expect(stars.eq(3).hasClass('icon-star-empty')).toBe(false);
-    expect(stars.eq(4).hasClass('icon-star-empty')).toBe(false);
+    expect(getState(stars)).toEqual([true, true, true, true, true]);
   });
 
 });
