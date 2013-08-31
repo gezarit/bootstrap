@@ -14,30 +14,31 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.position'])
   maxDate: null
 })
 
-.controller('DatepickerController', ['$scope', '$attrs', 'dateFilter', 'datepickerConfig', function($scope, $attrs, dateFilter, dtConfig) {
-  var format = {
-    day:        getValue($attrs.dayFormat,        dtConfig.dayFormat),
-    month:      getValue($attrs.monthFormat,      dtConfig.monthFormat),
-    year:       getValue($attrs.yearFormat,       dtConfig.yearFormat),
-    dayHeader:  getValue($attrs.dayHeaderFormat,  dtConfig.dayHeaderFormat),
-    dayTitle:   getValue($attrs.dayTitleFormat,   dtConfig.dayTitleFormat),
-    monthTitle: getValue($attrs.monthTitleFormat, dtConfig.monthTitleFormat)
+.controller('DatepickerController', ['$scope', '$attrs', '$parse', '$log', 'dateFilter', 'datepickerConfig', function($scope, $attrs, $parse, $log, dateFilter, config) {
+
+  var self = this,
+  ngModel = {},
+  format = {
+    day:        getValue($attrs.dayFormat,        config.dayFormat),
+    month:      getValue($attrs.monthFormat,      config.monthFormat),
+    year:       getValue($attrs.yearFormat,       config.yearFormat),
+    dayHeader:  getValue($attrs.dayHeaderFormat,  config.dayHeaderFormat),
+    dayTitle:   getValue($attrs.dayTitleFormat,   config.dayTitleFormat),
+    monthTitle: getValue($attrs.monthTitleFormat, config.monthTitleFormat)
   },
-  startingDay = getValue($attrs.startingDay,      dtConfig.startingDay),
-  yearRange =   getValue($attrs.yearRange,        dtConfig.yearRange);
+  startingDay = getValue($attrs.startingDay, config.startingDay),
+  yearRange   = getValue($attrs.yearRange,   config.yearRange);
 
-  this.minDate = dtConfig.minDate ? new Date(dtConfig.minDate) : null;
-  this.maxDate = dtConfig.maxDate ? new Date(dtConfig.maxDate) : null;
-
-  function getValue(value, defaultValue) {
-    return angular.isDefined(value) ? $scope.$parent.$eval(value) : defaultValue;
-  }
+  this.selected  = new Date();
+  this.showWeeks = config.showWeeks;
+  this.minDate   = config.minDate ? new Date(config.minDate) : null;
+  this.maxDate   = config.maxDate ? new Date(config.maxDate) : null;
 
   function getDaysInMonth( year, month ) {
     return new Date(year, month, 0).getDate();
   }
 
-  function getDates(startDate, n) {
+  function getDatesRange(startDate, n) {
     var dates = new Array(n);
     var current = startDate, i = 0;
     while (i < n) {
@@ -47,9 +48,39 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.position'])
     return dates;
   }
 
-  function makeDate(date, format, isSelected, isSecondary) {
-    return { date: date, label: dateFilter(date, format), selected: !!isSelected, secondary: !!isSecondary };
+  function getISO8601WeekNumber(date) {
+    var checkDate = new Date(date);
+    checkDate.setDate(checkDate.getDate() + 4 - (checkDate.getDay() || 7)); // Thursday
+    var time = checkDate.getTime();
+    checkDate.setMonth(0); // Compare with Jan 1
+    checkDate.setDate(1);
+    return Math.floor(Math.round((time - checkDate) / 86400000) / 7) + 1;
   }
+
+  // Split array into smaller arrays
+  function split(arr, size) {
+    var arrays = [];
+    while (arr.length > 0) {
+      arrays.push(arr.splice(0, size));
+    }
+    return arrays;
+  }
+
+  this.init = function(ngModel_) {
+    ngModel = ngModel_;
+
+    ngModel.$render = function() {
+      self.refill( true );
+    };
+  };
+
+  function getValue(value, defaultValue) {
+    return angular.isDefined(value) ? $scope.$parent.$eval(value) : defaultValue;
+  }
+
+  this.makeDate = function(date, format, isSelected, isSecondary) {
+    return { date: date, label: dateFilter(date, format), selected: !!isSelected, secondary: !!isSecondary };
+  };
 
   this.modes = [
     {
@@ -67,10 +98,10 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.position'])
         numDates += getDaysInMonth(year, month + 1); // Current
         numDates += (7 - numDates % 7) % 7; // Next
 
-        var days = getDates(firstDate, numDates), labels = new Array(7);
+        var days = getDatesRange(firstDate, numDates), labels = new Array(7);
         for (var i = 0; i < numDates; i ++) {
           var dt = new Date(days[i]);
-          days[i] = makeDate(dt, format.day, (selected && selected.getDate() === dt.getDate() && selected.getMonth() === dt.getMonth() && selected.getFullYear() === dt.getFullYear()), dt.getMonth() !== month);
+          days[i] = self.makeDate(dt, format.day, (selected && selected.getDate() === dt.getDate() && selected.getMonth() === dt.getMonth() && selected.getFullYear() === dt.getFullYear()), dt.getMonth() !== month);
         }
         for (var j = 0; j < 7; j++) {
           labels[j] = dateFilter(days[j].date, format.dayHeader);
@@ -89,7 +120,7 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.position'])
         var months = new Array(12), year = date.getFullYear();
         for ( var i = 0; i < 12; i++ ) {
           var dt = new Date(year, i, 1);
-          months[i] = makeDate(dt, format.month, (selected && selected.getMonth() === i && selected.getFullYear() === year));
+          months[i] = self.makeDate(dt, format.month, (selected && selected.getMonth() === i && selected.getFullYear() === year));
         }
         return { objects: months, title: dateFilter(date, format.monthTitle) };
       },
@@ -105,7 +136,7 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.position'])
         var years = new Array(yearRange), year = date.getFullYear(), startYear = parseInt((year - 1) / yearRange, 10) * yearRange + 1;
         for ( var i = 0; i < yearRange; i++ ) {
           var dt = new Date(startYear + i, 0, 1);
-          years[i] = makeDate(dt, format.year, (selected && selected.getFullYear() === dt.getFullYear()));
+          years[i] = self.makeDate(dt, format.year, (selected && selected.getFullYear() === dt.getFullYear()));
         }
         return { objects: years, title: [years[0].label, years[yearRange - 1].label].join(' - ') };
       },
@@ -121,9 +152,97 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.position'])
     var currentMode = this.modes[mode || 0];
     return ((this.minDate && currentMode.compare(date, this.minDate) < 0) || (this.maxDate && currentMode.compare(date, this.maxDate) > 0) || ($scope.dateDisabled && $scope.dateDisabled({date: date, mode: currentMode.name})));
   };
+
+  $scope.mode = 0; // Initial mode
+
+  this.updateShowWeekNumbers = function() {
+    $scope.showWeekNumbers = $scope.mode === 0 && this.showWeeks;
+  };
+
+  if ($attrs.showWeeks) {
+    $scope.$parent.$watch($parse($attrs.showWeeks), function(value) {
+      self.showWeeks = !! value;
+      self.updateShowWeekNumbers();
+    });
+  } else {
+    this.updateShowWeekNumbers();
+  }
+
+  if ($attrs.min) {
+    $scope.$parent.$watch($parse($attrs.min), function(value) {
+      self.minDate = value ? new Date(value) : null;
+      self.refill();
+    });
+  }
+  if ($attrs.max) {
+    $scope.$parent.$watch($parse($attrs.max), function(value) {
+      self.maxDate = value ? new Date(value) : null;
+      self.refill();
+    });
+  }
+
+  $scope.getWeekNumber = function(row) {
+    return ( $scope.mode === 0 && $scope.showWeekNumbers && row.length === 7 ) ? getISO8601WeekNumber(row[0].date) : null;
+  };
+
+  this.setMode = function(value) {
+    $scope.mode = value;
+    this.updateShowWeekNumbers();
+    this.refill();
+  };
+
+  this.refill = function( updateSelected ) {
+    var date = null, valid = true;
+
+    if ( ngModel.$modelValue ) {
+      date = new Date( ngModel.$modelValue );
+
+      if ( isNaN(date) ) {
+        valid = false;
+        $log.error('Datepicker directive: "ng-model" value must be a Date object, a number of milliseconds since 01.01.1970 or a string representing an RFC2822 or ISO 8601 date.');
+      } else if ( updateSelected ) {
+        this.selected = date;
+      }
+    }
+    ngModel.$setValidity('date', valid);
+
+    var currentMode = this.modes[$scope.mode], data = currentMode.getVisibleDates(this.selected, date);
+    angular.forEach(data.objects, function(obj) {
+      obj.disabled = self.isDisabled(obj.date, $scope.mode);
+    });
+
+    ngModel.$setValidity('date-disabled', (!date || !this.isDisabled(date)));
+
+    $scope.rows = split(data.objects, currentMode.split);
+    $scope.labels = data.labels || [];
+    $scope.title = data.title;
+  };
+
+  $scope.select = function( date ) {
+    if ( $scope.mode === 0 ) {
+      var dt = new Date( ngModel.$modelValue );
+      dt.setFullYear( date.getFullYear(), date.getMonth(), date.getDate() );
+      ngModel.$setViewValue( dt );
+      self.refill( true );
+    } else {
+      self.selected = date;
+      self.setMode( $scope.mode - 1 );
+    }
+  };
+
+  $scope.move = function(direction) {
+    var step = self.modes[$scope.mode].step;
+    self.selected.setMonth( self.selected.getMonth() + direction * (step.months || 0) );
+    self.selected.setFullYear( self.selected.getFullYear() + direction * (step.years || 0) );
+    self.refill();
+  };
+
+  $scope.toggleMode = function() {
+    self.setMode( ($scope.mode + 1) % self.modes.length );
+  };
 }])
 
-.directive( 'datepicker', ['dateFilter', '$parse', 'datepickerConfig', '$log', function (dateFilter, $parse, datepickerConfig, $log) {
+.directive( 'datepicker', function () {
   return {
     restrict: 'EA',
     replace: true,
@@ -136,120 +255,12 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.position'])
     link: function(scope, element, attrs, ctrls) {
       var datepickerCtrl = ctrls[0], ngModel = ctrls[1];
 
-      if (!ngModel) {
-        return; // do nothing if no ng-model
-      }
-
-      // Configuration parameters
-      var mode = 0, selected = new Date(), showWeeks = datepickerConfig.showWeeks;
-
-      if (attrs.showWeeks) {
-        scope.$parent.$watch($parse(attrs.showWeeks), function(value) {
-          showWeeks = !! value;
-          updateShowWeekNumbers();
-        });
-      } else {
-        updateShowWeekNumbers();
-      }
-
-      if (attrs.min) {
-        scope.$parent.$watch($parse(attrs.min), function(value) {
-          datepickerCtrl.minDate = value ? new Date(value) : null;
-          refill();
-        });
-      }
-      if (attrs.max) {
-        scope.$parent.$watch($parse(attrs.max), function(value) {
-          datepickerCtrl.maxDate = value ? new Date(value) : null;
-          refill();
-        });
-      }
-
-      function updateShowWeekNumbers() {
-        scope.showWeekNumbers = mode === 0 && showWeeks;
-      }
-
-      // Split array into smaller arrays
-      function split(arr, size) {
-        var arrays = [];
-        while (arr.length > 0) {
-          arrays.push(arr.splice(0, size));
-        }
-        return arrays;
-      }
-
-      function refill( updateSelected ) {
-        var date = null, valid = true;
-
-        if ( ngModel.$modelValue ) {
-          date = new Date( ngModel.$modelValue );
-
-          if ( isNaN(date) ) {
-            valid = false;
-            $log.error('Datepicker directive: "ng-model" value must be a Date object, a number of milliseconds since 01.01.1970 or a string representing an RFC2822 or ISO 8601 date.');
-          } else if ( updateSelected ) {
-            selected = date;
-          }
-        }
-        ngModel.$setValidity('date', valid);
-
-        var currentMode = datepickerCtrl.modes[mode], data = currentMode.getVisibleDates(selected, date);
-        angular.forEach(data.objects, function(obj) {
-          obj.disabled = datepickerCtrl.isDisabled(obj.date, mode);
-        });
-
-        ngModel.$setValidity('date-disabled', (!date || !datepickerCtrl.isDisabled(date)));
-
-        scope.rows = split(data.objects, currentMode.split);
-        scope.labels = data.labels || [];
-        scope.title = data.title;
-      }
-
-      function setMode(value) {
-        mode = value;
-        updateShowWeekNumbers();
-        refill();
-      }
-
-      ngModel.$render = function() {
-        refill( true );
-      };
-
-      scope.select = function( date ) {
-        if ( mode === 0 ) {
-          var dt = new Date( ngModel.$modelValue );
-          dt.setFullYear( date.getFullYear(), date.getMonth(), date.getDate() );
-          ngModel.$setViewValue( dt );
-          refill( true );
-        } else {
-          selected = date;
-          setMode( mode - 1 );
-        }
-      };
-      scope.move = function(direction) {
-        var step = datepickerCtrl.modes[mode].step;
-        selected.setMonth( selected.getMonth() + direction * (step.months || 0) );
-        selected.setFullYear( selected.getFullYear() + direction * (step.years || 0) );
-        refill();
-      };
-      scope.toggleMode = function() {
-        setMode( (mode + 1) % datepickerCtrl.modes.length );
-      };
-      scope.getWeekNumber = function(row) {
-        return ( mode === 0 && scope.showWeekNumbers && row.length === 7 ) ? getISO8601WeekNumber(row[0].date) : null;
-      };
-
-      function getISO8601WeekNumber(date) {
-        var checkDate = new Date(date);
-        checkDate.setDate(checkDate.getDate() + 4 - (checkDate.getDay() || 7)); // Thursday
-        var time = checkDate.getTime();
-        checkDate.setMonth(0); // Compare with Jan 1
-        checkDate.setDate(1);
-        return Math.floor(Math.round((time - checkDate) / 86400000) / 7) + 1;
+      if ( ngModel ) {
+        datepickerCtrl.init( ngModel );
       }
     }
   };
-}])
+})
 
 .constant('datepickerPopupConfig', {
   dateFormat: 'yyyy-MM-dd',
@@ -263,7 +274,7 @@ function ($compile, $parse, $document, $position, dateFilter, datepickerPopupCon
     require: 'ngModel',
     link: function(originalScope, element, attrs, ngModel) {
 
-      var closeOnDateSelection = angular.isDefined(attrs.closeOnDateSelection) ? scope.$eval(attrs.closeOnDateSelection) : datepickerPopupConfig.closeOnDateSelection;
+      var closeOnDateSelection = angular.isDefined(attrs.closeOnDateSelection) ? originalScope.$eval(attrs.closeOnDateSelection) : datepickerPopupConfig.closeOnDateSelection;
       var dateFormat = attrs.datepickerPopup || datepickerPopupConfig.dateFormat;
 
      // create a child scope for the datepicker directive so we are not polluting original scope
