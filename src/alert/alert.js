@@ -8,8 +8,8 @@ angular.module("ui.bootstrap.alert", []).directive('alert', function () {
       type: '=',
       close: '&'
     },
-    link: function(scope, iElement, iAttrs) {
-      scope.closeable = "close" in iAttrs;
+    link: function(scope, element, attrs) {
+      scope.closable = "close" in attrs && (angular.isUndefined(attrs.closable) || scope.$parent.$eval(attrs.closable) !== false);
     }
   };
 });
