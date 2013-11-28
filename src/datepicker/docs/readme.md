@@ -98,3 +98,7 @@ Specific settings for the `datepicker-popup`, that can globally configured throu
  * `datepicker-append-to-body`
   _(Default: false)_:
   Append the datepicker popup element to `body`, rather than inserting after `datepicker-popup`. For global configuration, use `datepickerPopupConfig.appendToBody`.
+
+ * `calculate-position`
+  _(Default: true)_:
+  Whether the popup's position is absolutely calculated every time it is shown. Otherwise, it is just toggle on the initial position.

@@ -259,7 +259,8 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.position'])
   closeText: 'Done',
   closeOnDateSelection: true,
   appendToBody: false,
-  showButtonBar: true
+  showButtonBar: true,
+  calculatePosition: true
 })
 
 .directive('datepickerPopup', ['$compile', '$parse', '$document', '$position', 'dateFilter', 'datepickerPopupConfig', 'datepickerConfig',
@@ -271,7 +272,8 @@ function ($compile, $parse, $document, $position, dateFilter, datepickerPopupCon
       var scope = originalScope.$new(), // create a child scope so we are not polluting original one
           dateFormat,
           closeOnDateSelection = angular.isDefined(attrs.closeOnDateSelection) ? originalScope.$eval(attrs.closeOnDateSelection) : datepickerPopupConfig.closeOnDateSelection,
-          appendToBody = angular.isDefined(attrs.datepickerAppendToBody) ? originalScope.$eval(attrs.datepickerAppendToBody) : datepickerPopupConfig.appendToBody;
+          appendToBody = angular.isDefined(attrs.datepickerAppendToBody) ? originalScope.$eval(attrs.datepickerAppendToBody) : datepickerPopupConfig.appendToBody,
+          calculatePosition = angular.isDefined(attrs.calculatePosition) ? originalScope.$eval(attrs.calculatePosition) : datepickerPopupConfig.calculatePosition;
 
       attrs.$observe('datepickerPopup', function(value) {
           dateFormat = value || datepickerPopupConfig.dateFormat;
@@ -377,7 +379,7 @@ function ($compile, $parse, $document, $position, dateFilter, datepickerPopupCon
 
       element.bind('input change keyup', function() {
         scope.$apply(function() {
-          updateCalendar();
+          scope.date = ngModel.$modelValue;
         });
       });
 
@@ -385,14 +387,8 @@ function ($compile, $parse, $document, $position, dateFilter, datepickerPopupCon
       ngModel.$render = function() {
         var date = ngModel.$viewValue ? dateFilter(ngModel.$viewValue, dateFormat) : '';
         element.val(date);
-
-        updateCalendar();
-      };
-
-      function updateCalendar() {
         scope.date = ngModel.$modelValue;
-        updatePosition();
-      }
+      };
 
       function addWatchableAttribute(attribute, scopeProperty, datepickerAttribute) {
         if (attribute) {
@@ -415,8 +411,13 @@ function ($compile, $parse, $document, $position, dateFilter, datepickerPopupCon
       }
 
       function updatePosition() {
-        scope.position = appendToBody ? $position.offset(element) : $position.position(element);
-        scope.position.top = scope.position.top + element.prop('offsetHeight');
+        if ( appendToBody || calculatePosition ) {
+          scope.position = appendToBody ? $position.offset(element) : $position.position(element);
+          scope.position.top = scope.position.top + element.prop('offsetHeight') + 'px';
+          scope.position.left += 'px';
+        } else {
+          scope.position = { top: 'initial', left: 'initial' };
+        }
       }
 
       var documentBindingInitialized = false, elementFocusInitialized = false;
