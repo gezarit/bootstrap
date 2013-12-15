@@ -64,7 +64,7 @@ angular.module( 'ui.bootstrap.tooltip', [ 'ui.bootstrap.position', 'ui.bootstrap
    * Returns the actual instance of the $tooltip service.
    * TODO support multiple triggers
    */
-  this.$get = [ '$window', '$compile', '$timeout', '$parse', '$document', '$position', '$interpolate', function ( $window, $compile, $timeout, $parse, $document, $position, $interpolate ) {
+  this.$get = [ '$compile', '$timeout', '$parse', '$document', '$position', '$interpolate', function ( $compile, $timeout, $parse, $document, $position, $interpolate ) {
     return function $tooltip ( type, prefix, defaultTriggerShow ) {
       var options = angular.extend( {}, defaultOptions, globalOptions );
 
@@ -116,14 +116,12 @@ angular.module( 'ui.bootstrap.tooltip', [ 'ui.bootstrap.position', 'ui.bootstrap
           var triggers = getTriggers( undefined );
           var hasRegisteredTriggers = false;
           var hasEnableExp = angular.isDefined(attrs[prefix+'Enable']);
+          var position;
 
           var positionTooltip = function (){
-            var position,
-              ttWidth,
+            var ttWidth,
               ttHeight,
               ttPosition;
-            // Get the position of the directive element.
-            position = appendToBody ? $position.offset( element ) : $position.position( element );
 
             // Get the height and width of the tooltip so we can center it.
             ttWidth = tooltip.prop( 'offsetWidth' );
@@ -222,7 +220,11 @@ angular.module( 'ui.bootstrap.tooltip', [ 'ui.bootstrap.position', 'ui.bootstrap
             } else {
               element.after( tooltip );
             }
+            
+            // Get the position of the directive element.
+            position = appendToBody ? $position.offset( element ) : $position.position( element );
 
+            // Place tooltip
             positionTooltip();
 
             // And show the tooltip.
@@ -259,8 +261,14 @@ angular.module( 'ui.bootstrap.tooltip', [ 'ui.bootstrap.position', 'ui.bootstrap
           attrs.$observe( type, function ( val ) {
             scope.tt_content = val;
 
-            if (!val && scope.tt_isOpen ) {
-              hide();
+            if (scope.tt_isOpen) {
+              if (!val) {
+                hide();
+              } else {
+                // Wait DOM to be updated and adjust position based on the new tooltip dimensions
+                // and the last known position of the directive element.
+                scope.$evalAsync(positionTooltip);
+              }
             }
           });
 

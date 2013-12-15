@@ -1,14 +1,15 @@
 describe('tooltip directive', function () {
 
-  var $rootScope, $compile, $document, $timeout;
+  var $rootScope, $compile, $document, $timeout, $position;
 
   beforeEach(module('ui.bootstrap.tooltip'));
   beforeEach(module('template/tooltip/tooltip-popup.html'));
-  beforeEach(inject(function (_$rootScope_, _$compile_, _$document_, _$timeout_) {
+  beforeEach(inject(function (_$rootScope_, _$compile_, _$document_, _$timeout_, _$position_) {
     $rootScope = _$rootScope_;
     $compile = _$compile_;
     $document = _$document_;
     $timeout = _$timeout_;
+    $position = _$position_;
   }));
 
   beforeEach(function(){
@@ -101,5 +102,38 @@ describe('tooltip directive', function () {
 
     });
 
+  });
+  
+  describe('position', function() {
+    
+    beforeEach(function() {
+      spyOn($position, 'position').andCallThrough();
+    });
+    
+    it('is called once on mouse enter and leave', function () {
+      var fragment = compileTooltip('<span tooltip="tooltip text">Trigger here</span>');
+
+      expect($position.position).not.toHaveBeenCalled();
+    
+      fragment.find('span').trigger( 'mouseenter' );
+      expect($position.position.calls.length).toEqual(1);
+
+      closeTooltip(fragment.find('span'));
+      expect($position.position.calls.length).toEqual(1);
+    });
+    
+    it('is called once for content updates when is open', function () {
+      $rootScope.content = 'some text';
+      var fragment = compileTooltip('<span tooltip="{{ content }}">Trigger here</span>');
+
+      expect($position.position).not.toHaveBeenCalled();
+    
+      fragment.find('span').trigger( 'mouseenter' );
+      expect($position.position.calls.length).toEqual(1);
+      
+      $rootScope.content = 'some new text';
+      $rootScope.$digest();
+      expect($position.position.calls.length).toEqual(1);
+    });
   });
 });
