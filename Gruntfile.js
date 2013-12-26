@@ -26,7 +26,13 @@ module.exports = function(grunt) {
     meta: {
       modules: 'angular.module("ui.bootstrap", [<%= srcModules %>]);',
       tplmodules: 'angular.module("ui.bootstrap.tpls", [<%= tplModules %>]);',
-      all: 'angular.module("ui.bootstrap", ["ui.bootstrap.tpls", <%= srcModules %>]);'
+      all: 'angular.module("ui.bootstrap", ["ui.bootstrap.tpls", <%= srcModules %>]);',
+      banner: '/*\n' +
+       ' * <%= pkg.name %>\n' +
+       ' * <%= pkg.homepage %>\n\n' +
+       ' * Version: <%= pkg.version %> - <%= grunt.template.today("yyyy-mm-dd") %>\n' +
+       ' * License: <%= pkg.license %>\n' +
+       ' */\n'
     },
     delta: {
       docs: {
@@ -46,17 +52,17 @@ module.exports = function(grunt) {
     concat: {
       dist: {
         options: {
-          banner: '<%= meta.modules %>\n'
+          banner: '<%= meta.banner %><%= meta.modules %>\n'
         },
         src: [], //src filled in by build task
-        dest: '<%= dist %>/<%= filename %>-<%= pkg.version %>.js'
+        dest: '<%= dist %>/<%= filename %>-no-tpls-<%= pkg.version %>.js'
       },
       dist_tpls: {
         options: {
-          banner: '<%= meta.all %>\n<%= meta.tplmodules %>\n'
+          banner: '<%= meta.banner %><%= meta.all %>\n<%= meta.tplmodules %>\n'
         },
         src: [], //src filled in by build task
-        dest: '<%= dist %>/<%= filename %>-tpls-<%= pkg.version %>.js'
+        dest: '<%= dist %>/<%= filename %>-<%= pkg.version %>.js'
       }
     },
     copy: {
@@ -83,13 +89,16 @@ module.exports = function(grunt) {
       }
     },
     uglify: {
+      options: {
+        banner: '<%= meta.banner %>'
+      },
       dist:{
-        src:['<%= dist %>/<%= filename %>-<%= pkg.version %>.js'],
-        dest:'<%= dist %>/<%= filename %>-<%= pkg.version %>.min.js'
+        src:['<%= concat.dist.dest %>'],
+        dest:'<%= dist %>/<%= filename %>-no-tpls-<%= pkg.version %>.min.js'
       },
       dist_tpls:{
-        src:['<%= dist %>/<%= filename %>-tpls-<%= pkg.version %>.js'],
-        dest:'<%= dist %>/<%= filename %>-tpls-<%= pkg.version %>.min.js'
+        src:['<%= concat.dist_tpls.dest %>'],
+        dest:'<%= dist %>/<%= filename %>-<%= pkg.version %>.min.js'
       }
     },
     html2js: {
