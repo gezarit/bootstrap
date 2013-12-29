@@ -5,9 +5,9 @@ angular.module('ui.bootstrap.buttons', [])
   toggleEvent: 'click'
 })
 
-.controller('ButtonsController', ['buttonConfig', function(buttonConfig) {
-  this.activeClass = buttonConfig.activeClass || 'active';
-  this.toggleEvent = buttonConfig.toggleEvent || 'click';
+.controller('ButtonsController', ['$scope', '$attrs', '$interpolate', 'buttonConfig', function($scope, $attrs, $interpolate, buttonConfig) {
+  this.activeClass = angular.isDefined($attrs.activeClass) ? $interpolate($attrs.activeClass)($scope) : buttonConfig.activeClass;
+  this.toggleEvent = angular.isDefined($attrs.toggleEvent) ? $interpolate($attrs.toggleEvent)($scope) : buttonConfig.toggleEvent;
 }])
 
 .directive('btnRadio', function () {

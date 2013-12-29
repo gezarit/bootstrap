@@ -80,6 +80,38 @@ describe('buttons', function () {
       expect(btn).toHaveClass('active');
       expect($scope.model).toEqual(2);
     });
+    
+    it('should configure active classes from attribute', function () {
+      $scope.model = false;
+      var btn = compileButton('<button ng-model="model" btn-checkbox active-class="one two">click</button>', $scope);
+      expect(btn).not.toHaveClass('one');
+      expect(btn).not.toHaveClass('two');
+      expect(btn).not.toHaveClass('active');
+
+      $scope.model = true;
+      $scope.$digest();
+      expect(btn).toHaveClass('one');
+      expect(btn).toHaveClass('two');
+      expect(btn).not.toHaveClass('active');
+    });
+    
+    it('should configure trigger event from attribute', function () {
+      $scope.model = false;
+      var btn = compileButton('<button ng-model="model" btn-checkbox toggle-event="dblclick">click</button>', $scope);
+
+      // Don't react on simple click
+      btn.click();
+      expect($scope.model).toEqual(false);
+      expect(btn).not.toHaveClass('active');
+      
+      btn.dblclick();
+      expect($scope.model).toEqual(true);
+      expect(btn).toHaveClass('active');
+
+      btn.dblclick();
+      expect($scope.model).toEqual(false);
+      expect(btn).not.toHaveClass('active');
+    });
   });
 
   describe('radio', function () {
@@ -135,6 +167,22 @@ describe('buttons', function () {
       $scope.$digest();
       expect(btns.eq(0)).not.toHaveClass('active');
       expect(btns.eq(1)).toHaveClass('active');
+    });
+    
+    it('should configure active classes from attribute', function () {
+      $scope.model = 1;
+      var btns = compileButtons('<button ng-model="model" btn-radio="1" active-class="one">click1</button><button ng-model="model" btn-radio="2" active-class="two">click2</button>', $scope);
+      expect(btns.eq(0)).toHaveClass('one');
+      expect(btns.eq(0)).not.toHaveClass('two');
+      expect(btns.eq(1)).not.toHaveClass('one');
+      expect(btns.eq(1)).not.toHaveClass('two');
+
+      $scope.model = 2;
+      $scope.$digest();
+      expect(btns.eq(0)).not.toHaveClass('one');
+      expect(btns.eq(0)).not.toHaveClass('two');
+      expect(btns.eq(1)).not.toHaveClass('one');
+      expect(btns.eq(1)).toHaveClass('two');
     });
   });
 });
