@@ -154,7 +154,13 @@ module.exports = function(grunt) {
         preprocessors: {
           'src/*/*.js': 'coverage'
         },
-        reporters: ['progress', 'coverage']
+        reporters: ['progress', 'coverage'],
+        coverageReporter: {
+          reporters:[
+            {type: 'html'},
+            {type: 'text'}
+          ],
+        }
       }
     },
     changelog: {
@@ -342,12 +348,10 @@ module.exports = function(grunt) {
     if (process.env.TRAVIS) {
       grunt.task.run('karma:travis');
     } else {
-      var isToRunJenkinsTask = !!this.args.length;
       if(grunt.option('coverage')) {
         var karmaOptions = grunt.config.get('karma.options'),
           coverageOpts = grunt.config.get('karma.coverage');
-        _.extend(karmaOptions, coverageOpts);
-        grunt.config.set('karma.options', karmaOptions);
+        grunt.config.set('karma.options', _.extend(karmaOptions, coverageOpts));
       }
       grunt.task.run(this.args.length ? 'karma:jenkins' : 'karma:continuous');
     }
