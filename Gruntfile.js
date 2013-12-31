@@ -1,4 +1,5 @@
-var markdown = require('node-markdown').Markdown;
+var marked = require('marked'),
+    _ = require('lodash');
 
 module.exports = function(grunt) {
 
@@ -253,7 +254,9 @@ module.exports = function(grunt) {
       dependencies: dependenciesForModule(name),
       docs: {
         md: grunt.file.expand("src/"+name+"/docs/*.md")
-          .map(grunt.file.read).map(markdown).join("\n"),
+          .map(grunt.file.read).map(function(readme) {
+            return marked(readme);
+          }).join("\n"),
         js: grunt.file.expand("src/"+name+"/docs/*.js")
           .map(grunt.file.read).join("\n"),
         html: grunt.file.expand("src/"+name+"/docs/*.html")
@@ -295,8 +298,6 @@ module.exports = function(grunt) {
   });
 
   grunt.registerTask('build', 'Create bootstrap build files', function() {
-    var _ = grunt.util._;
-
     //If arguments define what modules to build, build those. Else, everything
     if (this.args.length) {
       this.args.forEach(findModule);
@@ -345,7 +346,7 @@ module.exports = function(grunt) {
       if(grunt.option('coverage')) {
         var karmaOptions = grunt.config.get('karma.options'),
           coverageOpts = grunt.config.get('karma.coverage');
-        grunt.util._.extend(karmaOptions, coverageOpts);
+        _.extend(karmaOptions, coverageOpts);
         grunt.config.set('karma.options', karmaOptions);
       }
       grunt.task.run(this.args.length ? 'karma:jenkins' : 'karma:continuous');
