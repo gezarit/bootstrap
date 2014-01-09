@@ -60,8 +60,7 @@ angular.module('ui.bootstrap.progressbar', ['ui.bootstrap.transition'])
         controller: 'ProgressController',
         require: 'progress',
         scope: {},
-        template: '<div class="progress" ng-transclude></div>'
-        //templateUrl: 'template/progressbar/progress.html' // Works in AngularJS 1.2
+        templateUrl: 'template/progressbar/progress.html'
     };
 })
 
