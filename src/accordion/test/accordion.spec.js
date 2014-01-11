@@ -375,5 +375,17 @@ describe('accordion', function () {
       });
     });
 
+    describe('`type` attribute', function() {
+      it('should use correct classes for different types', function() {
+        element = $compile('<accordion><accordion-group ng-repeat="x in [\'error\', \'warning\', \'\']" type="{{x}}"></accordion-group></accordion>')(scope);
+        scope.$digest();
+        groups = element.find('.panel');
+        expect(groups.length).toBe(3);
+        expect(groups.eq(0)).toHaveClass('panel-error');
+        expect(groups.eq(1)).toHaveClass('panel-warning');
+        expect(groups.eq(2)).toHaveClass('panel-default');
+      });
+    });
+
   });
 });

@@ -16,11 +16,11 @@
         <button class="btn btn-default btn-sm" ng-click="addItem()">Add Item</button>
         <div ng-repeat="item in items">{{item}}</div>
     </accordion-group>
-    <accordion-group is-open="isopen">
+    <accordion-group is-open="isopen" type="primary">
         <accordion-heading>
             I can have markup, too! <i class="pull-right glyphicon" ng-class="{'glyphicon-chevron-down': isopen, 'glyphicon-chevron-right': !isopen}"></i>
         </accordion-heading>
-        This is just some content to illustrate fancy headings.
+        This is just some content to illustrate fancy and contextual headings.
     </accordion-group>
   </accordion>
 </div>
