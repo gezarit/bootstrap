@@ -10,7 +10,7 @@ angular.module('ui.bootstrap.dropdown', [])
   this.open = function( dropdownScope ) {
     if ( !openScope ) {
       $document.bind('click', closeDropdown);
-      $document.bind('keydown', escapeKeyBind);
+      $document.bind('keydown', keydownBind);
     }
 
     if ( openScope && openScope !== dropdownScope ) {
@@ -18,13 +18,14 @@ angular.module('ui.bootstrap.dropdown', [])
     }
 
     openScope = dropdownScope;
+    openScope.focusIndex = -1;
   };
 
   this.close = function( dropdownScope ) {
     if ( openScope === dropdownScope ) {
       openScope = null;
       $document.unbind('click', closeDropdown);
-      $document.unbind('keydown', escapeKeyBind);
+      $document.unbind('keydown', keydownBind);
     }
   };
 
@@ -34,9 +35,21 @@ angular.module('ui.bootstrap.dropdown', [])
     });
   };
 
-  var escapeKeyBind = function( evt ) {
-    if ( evt.which === 27 ) {
-      closeDropdown();
+  var keydownBind = function( evt ) {
+    if (/(38|40|27)/.test(evt.which)) {
+      evt.preventDefault();
+      evt.stopPropagation();
+
+      if ( evt.which === 27 ) {
+        closeDropdown();
+      } else if ( openScope.items.length > 0 ) {
+        if (evt.which === 38 && openScope.focusIndex > 0) {
+          openScope.focusIndex--;   // up
+        } else if (evt.which === 40 && openScope.focusIndex < openScope.items.length - 1) {
+          openScope.focusIndex++;   // down
+        }
+        openScope.items[openScope.focusIndex].focus();
+      }
     }
   };
 }])
@@ -45,7 +58,8 @@ angular.module('ui.bootstrap.dropdown', [])
   var self = this, openClass = dropdownConfig.openClass;
 
   this.init = function( element ) {
-    self.$element = element;
+    $scope.element = element;
+    $scope.items = this.getItems(element);
     $scope.isOpen = angular.isDefined($attrs.isOpen) ? $scope.$parent.$eval($attrs.isOpen) : false;
   };
 
@@ -58,8 +72,12 @@ angular.module('ui.bootstrap.dropdown', [])
     return $scope.isOpen;
   };
 
+  this.getItems = function( element ) {
+    return element[0].querySelectorAll('.dropdown-menu > li a');
+  };
+
   $scope.$watch('isOpen', function( value ) {
-    $animate[value ? 'addClass' : 'removeClass'](self.$element, openClass);
+    $animate[value ? 'addClass' : 'removeClass']($scope.element, openClass);
 
     if ( value ) {
       dropdownService.open( $scope );

@@ -1,4 +1,4 @@
-describe('dropdownToggle', function() {
+ddescribe('dropdownToggle', function() {
   var $compile, $rootScope, $document, element;
 
   beforeEach(module('ui.bootstrap.dropdown'));
