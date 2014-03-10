@@ -32,7 +32,8 @@ angular.module('ui.bootstrap.typeahead', ['ui.bootstrap.position', 'ui.bootstrap
   .directive('typeahead', ['$compile', '$parse', '$q', '$timeout', '$document', '$position', 'typeaheadParser',
     function ($compile, $parse, $q, $timeout, $document, $position, typeaheadParser) {
 
-  var HOT_KEYS = [9, 13, 27, 38, 40];
+  var HOT_KEYS = [9, 13, 27, 38, 40],
+      instance = 0; // Use to create unique ID
 
   return {
     require:'ngModel',
@@ -70,14 +71,17 @@ angular.module('ui.bootstrap.typeahead', ['ui.bootstrap.position', 'ui.bootstrap
       var hasFocus;
 
       // WAI-ARIA
+      var popupId = 'typeahead-' + (instance++) + '-' + Math.floor(Math.random() * 10000);
       element.attr({
         'aria-autocomplete': 'list',
-        'aria-expanded': false
+        'aria-expanded': false,
+        'aria-owns': popupId
       });
 
       //pop-up element used to display matches
       var popUpEl = angular.element('<div typeahead-popup></div>');
       popUpEl.attr({
+        id: popupId,
         matches: 'matches',
         active: 'activeIdx',
         select: 'select(activeIdx)',
@@ -102,6 +106,16 @@ angular.module('ui.bootstrap.typeahead', ['ui.bootstrap.position', 'ui.bootstrap
         element.attr('aria-expanded', false);
       };
 
+      // Indicate that the specified match is the active (pre-selected) item in the list owned by this typeahead.
+      // This attribute is added or removed automatically when the `activeIdx` changes.
+      scope.$watch('activeIdx', function(index) {
+        if (index < 0) {
+          element.removeAttr('aria-activedescendant');
+        } else {
+          element.attr('aria-activedescendant', popupId + '-option-' + index);
+        }
+      });
+
       var getMatchesAsync = function(inputValue) {
 
         var locals = {$viewValue: inputValue};
@@ -118,11 +132,12 @@ angular.module('ui.bootstrap.typeahead', ['ui.bootstrap.position', 'ui.bootstrap
               scope.matches.length = 0;
 
               //transform labels
-              for(var i=0; i<matches.length; i++) {
+              for(var i=0, n=matches.length; i<n; i++) {
                 locals[parserResult.itemName] = matches[i];
                 scope.matches.push({
                   label: parserResult.viewMapper(scope, locals),
-                  model: matches[i]
+                  model: matches[i],
+                  uid: popupId + '-option-' + i
                 });
               }
 
